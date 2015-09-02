@@ -10,10 +10,13 @@
 #include "Table.hpp"
 
 class Balls{
-	public:
+	public:		
+		static const unsigned short BALL_WIDTH = 14;
+		static const unsigned short SIGNIFICANT_CHANGE_TOL = 5;
+		static const float SIGNIFICANT_CHANGE_RATIO = 0.6;
 		cv::Point2i getWhitePos(cv::Mat& image, Table& t);
 	private:
-		bool checkBallness(cv::Mat& imageROI, float x, float y);
+		bool checkBallness(cv::Mat& imageROI, double x, double y);
 
 };
 
