@@ -1,0 +1,1 @@
+/home/gzuri/snooker/source/CMakeFiles/segment_table.dir

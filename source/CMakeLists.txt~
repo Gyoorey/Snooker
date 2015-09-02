@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+project( segment_table )
+find_package( OpenCV REQUIRED )
+add_executable( segment_table segment_table.cpp )
+target_link_libraries( segment_table  ${OpenCV_LIBS}  Table.hpp  Table.cpp)
