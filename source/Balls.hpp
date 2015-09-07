@@ -11,9 +11,10 @@
 
 class Balls{
 	public:		
-		static const unsigned short BALL_WIDTH = 14;
-		static const unsigned short SIGNIFICANT_CHANGE_TOL = 5;
-		static const float SIGNIFICANT_CHANGE_RATIO = 0.6;
+		static const unsigned short BALL_WIDTH = 16;
+		static const unsigned short SIGNIFICANT_CHANGE_TOL = 4;
+		static constexpr float SIGNIFICANT_CHANGE_RATIO = 0.8;
+		std::vector<cv::Point2i> getWhiteAreas(cv::Mat& image, Table& t);
 		cv::Point2i getWhitePos(cv::Mat& image, Table& t);
 	private:
 		bool checkBallness(cv::Mat& imageROI, double x, double y);
