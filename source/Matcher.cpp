@@ -50,6 +50,8 @@ std::vector<std::vector<cv::Point2i>> Matcher::getUnmatchingPoints(){
 			}
 		}
 	}
+	
+	//TODO: skip this and give back storedPositions
 	for( int i=0;i<counter;i++){
 		if(storedPositions[i].size()>0){
 			unmatchings.push_back(std::vector<cv::Point2i>());

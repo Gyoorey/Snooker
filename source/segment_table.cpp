@@ -23,15 +23,22 @@ int main( int argc, char** argv )
     Matcher m;
     int cnt = 0;
     cv::Point2i lastPos;
+    std::vector<cv::Point2i> whitePositions;
     for(;;)
     {
         cap >> image; // get a new frame from camera
         cv::Point2i whitePos = b.getWhitePos(image,t);
+        
         cv::Mat maskROI = t.mask(cv::Rect(t.bl.x,t.ul.y,(t.br.x-t.bl.x),(t.br.y-t.ur.y)));
 		cv::Mat imageROI = image(cv::Rect(t.bl.x,t.ul.y,(t.br.x-t.bl.x),(t.br.y-t.ur.y)));
 		cv::multiply(imageROI,maskROI,imageROI);
+		if(lastPos != whitePos){
+			whitePositions.push_back(whitePos);
+		}
 		if(whitePos.x == 0){
-			cv::inRange(imageROI, cv::Scalar(140, 140, 140), cv::Scalar(255, 255, 255), imageROI);
+			cv::imshow("edges", imageROI);
+        	cv::waitKey(0);
+			//cv::inRange(imageROI, cv::Scalar(140, 140, 140), cv::Scalar(255, 255, 255), imageROI);
 			std::vector<cv::Point2i> whiteAreas = b.getWhiteAreas(image,t);
 			/*for( std::vector<cv::Point2i>::iterator it = whiteAreas.begin() ; it<whiteAreas.end(); it++ ){
 				cv::circle(imageROI,*it,5,cv::Scalar(128,128,128),3);
@@ -61,8 +68,11 @@ int main( int argc, char** argv )
     		cv::inRange(imageROI, cv::Scalar(200, 240, 200), cv::Scalar(255, 255, 255), imageROI);
     		cv::circle(imageROI,whitePos,5,cv::Scalar(128,128,128),3);
     	}
+    	for( int w=0;w<whitePositions.size();w++){
+    		cv::circle(imageROI,whitePositions[w],5,cv::Scalar(255,255,255),3);
+    	}
 		cv::imshow("edges", imageROI);
-        if(cv::waitKey(30) >= 0) break;
+        if(cv::waitKey(100) >= 0) break;
     }
     
 
