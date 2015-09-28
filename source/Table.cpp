@@ -6,6 +6,9 @@ Table::Table(cv::Mat& image):ul(0.0,0.0),ur(0.0,0.0),bl(0.0,0.0),br(0.0,0.0),ml(
 	segmentField(image,stats);
 }
 
+Table::Table(){
+}
+
 bool Table::hasMask(){
 	return !(mask.empty());
 }
@@ -14,14 +17,14 @@ void Table::segmentRGB(cv::Mat& rgbImg){
 	mask = cv::Mat::zeros(rgbImg.rows,rgbImg.cols,CV_8UC1);
 	for(unsigned i=0;i<rgbImg.rows;i++){
 		for(unsigned j=0;j<rgbImg.cols;j++){
-			if( (rgbImg.at<cv::Vec3b>(i,j)[1]-rgbImg.at<cv::Vec3b>(i,j)[0]>60) && (rgbImg.at<cv::Vec3b>(i,j)[1]-rgbImg.at<cv::Vec3b>(i,j)[2]>60) ){
+			if( (rgbImg.at<cv::Vec3b>(i,j)[1]-rgbImg.at<cv::Vec3b>(i,j)[0]>GREEN_AND_OTHER_DIFF) && (rgbImg.at<cv::Vec3b>(i,j)[1]-rgbImg.at<cv::Vec3b>(i,j)[2]>GREEN_AND_OTHER_DIFF) ){
 				mask.at<uint8_t>(i,j) = 1;
 			}
 		}
 	}
-	//cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );	
-	//cv::imshow( "Display window", mask*200 ); 
-	//cv::waitKey(0);
+	cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );	
+	cv::imshow( "Display window", mask*200 ); 
+	cv::waitKey(0);
 }
 
 std::vector<uint16_t> Table::biggestRegion(){
@@ -56,7 +59,7 @@ std::vector<uint16_t> Table::biggestRegion(){
 void Table::segmentField(cv::Mat& rgbImg, std::vector<uint16_t> stats){
 	//std::vector<cv::Mat> rgbChannels(3);
 	//cv::split(rgbImg, rgbChannels);
-	int edgeThresh = 20;
+	int edgeThresh = 15;
 	cv::Mat gray, edge;
     cv::cvtColor(rgbImg, gray, cv::COLOR_BGR2GRAY);
     cv::multiply(gray,mask,gray);
@@ -65,11 +68,11 @@ void Table::segmentField(cv::Mat& rgbImg, std::vector<uint16_t> stats){
 	//calculate points for line fittings
 	//middle points
 	int m1 = stats[0]+stats[2]/2;
-	int m2 = stats[0]+stats[2]/2 - stats[2]/5;
-	int m3 = stats[0]+stats[2]/2 + stats[2]/5;
+	int m2 = stats[0]+stats[2]/2 - stats[2]/10;
+	int m3 = stats[0]+stats[2]/2 + stats[2]/10;
 	//two side walls
-	int sC1 = round(stats[1]+stats[3]/4);
-	int sC2 = round(stats[1]+3*stats[3]/4);
+	int sC1 = round(stats[1]+stats[3]/6);
+	int sC2 = round(stats[1]+5*stats[3]/6);
 	//get left points
 	cv::Point2i lC1,lC2;
 	for(int i=0;i<edge.cols;i++){
@@ -106,18 +109,27 @@ void Table::segmentField(cv::Mat& rgbImg, std::vector<uint16_t> stats){
 	cv::Point2i uM;
 	std::vector<uint16_t> upperPoints;
    	bool hasM1=false,hasM2=false,hasM3=false;
-   	for(uint16_t i=stats[1];i<edge.rows;i++){
-   		if(!hasM1 && edge.at<uint8_t>(i,m1) > 0){
+   	for(uint16_t i=0;i<edge.rows;i++){
+   		if( (rgbImg.at<cv::Vec3b>(i,m1)[1]-rgbImg.at<cv::Vec3b>(i,m1)[0]>GREEN_AND_OTHER_DIFF) && (rgbImg.at<cv::Vec3b>(i,m1)[1]-rgbImg.at<cv::Vec3b>(i,m1)[2]>GREEN_AND_OTHER_DIFF) && !hasM1){
+   		//if(!hasM1 && edge.at<uint8_t>(i,m1) > 0){
    			hasM1 = true;
    			upperPoints.push_back(i);
+   			std::cout << "1: " << i << std::endl;
+   			cv::circle(edge,cv::Point2i(m1,i),5,cv::Scalar(128,128,128),3);
    		}
-   		if(!hasM2 && edge.at<uint8_t>(i,m2) > 0){
+   		if( (rgbImg.at<cv::Vec3b>(i,m2)[1]-rgbImg.at<cv::Vec3b>(i,m2)[0]>GREEN_AND_OTHER_DIFF) && (rgbImg.at<cv::Vec3b>(i,m2)[1]-rgbImg.at<cv::Vec3b>(i,m2)[2]>GREEN_AND_OTHER_DIFF) && !hasM2){
+   		//if(!hasM2 && edge.at<uint8_t>(i,m2) > 0){
    			hasM2 = true;
    			upperPoints.push_back(i);
+   			std::cout << "2: " << i << std::endl;
+   			cv::circle(edge,cv::Point2i(m2,i),5,cv::Scalar(128,128,128),3);
    		}
-   		if(!hasM3 && edge.at<uint8_t>(i,m3) > 0){
+   		if( (rgbImg.at<cv::Vec3b>(i,m3)[1]-rgbImg.at<cv::Vec3b>(i,m3)[0]>GREEN_AND_OTHER_DIFF) && (rgbImg.at<cv::Vec3b>(i,m3)[1]-rgbImg.at<cv::Vec3b>(i,m3)[2]>GREEN_AND_OTHER_DIFF) && !hasM3){
+   		//if(!hasM3 && edge.at<uint8_t>(i,m3) > 0){
    			hasM3 = true;
    			upperPoints.push_back(i);
+   			std::cout << "3: " << i << std::endl;
+   			cv::circle(edge,cv::Point2i(m3,i),5,cv::Scalar(128,128,128),3);
    		}
    		if(hasM1 && hasM2 && hasM3){
    			uM.x = m1;
@@ -192,13 +204,13 @@ void Table::segmentField(cv::Mat& rgbImg, std::vector<uint16_t> stats){
  	realPositions.push_back(bM);
  	//virtual coordinates H=2*W
  	virtualPositions.push_back(cv::Point2f(0,0));
- 	virtualPositions.push_back(cv::Point2f(300,0));
- 	virtualPositions.push_back(cv::Point2f(300,600));
- 	virtualPositions.push_back(cv::Point2f(0,600));
- 	virtualPositions.push_back(cv::Point2f(150,0));
- 	virtualPositions.push_back(cv::Point2f(150,600));
+ 	virtualPositions.push_back(cv::Point2f(R_TABLE_WIDTH,0));
+ 	virtualPositions.push_back(cv::Point2f(R_TABLE_WIDTH,2*R_TABLE_WIDTH));
+ 	virtualPositions.push_back(cv::Point2f(0,2*R_TABLE_WIDTH));
+ 	virtualPositions.push_back(cv::Point2f(R_TABLE_WIDTH/2,0));
+ 	virtualPositions.push_back(cv::Point2f(R_TABLE_WIDTH/2,2*R_TABLE_WIDTH));
  	//get homography matrix
- 	cv::Mat H = cv::findHomography( realPositions, virtualPositions, 0 );
+ 	H = cv::findHomography( realPositions, virtualPositions, 0 );
  	//cv::warpPerspective(edge,edge,H,edge.size());
  	//cv::Mat t_src = cv::Mat::zeros(1,1,CV_64FC2);
  	//cv::Mat t_dst = cv::Mat::zeros(1,1,CV_64FC2);
@@ -280,19 +292,19 @@ void Table::segmentField(cv::Mat& rgbImg, std::vector<uint16_t> stats){
    	cv::Mat r_i_bM_dst = cv::Mat::zeros(1,1,CV_64FC2);
    	r_i_bM_src.at<cv::Vec2d>(0,0) = cv::Vec2d(bM_dst.at<cv::Vec2d>(0,0)[0]/bM_dst.at<cv::Vec2d>(0,0)[2],bM_dst.at<cv::Vec2d>(0,0)[1]/bM_dst.at<cv::Vec2d>(0,0)[2]-floor(distanceBetweenLines));
    	//invert H
-   	cv::Mat H_inv = cv::Mat(H.clone());
+   	H_inv = cv::Mat(H.clone());
    	cv::invert(H,H_inv);
    	//backproject r_i_bM
    	cv::transform(r_i_bM_src,r_i_bM_dst,H_inv);
    	i_bM.x = ceil(r_i_bM_dst.at<cv::Vec2d>(0,0)[0]/r_i_bM_dst.at<cv::Vec2d>(0,0)[2]);
    	i_bM.y = ceil(r_i_bM_dst.at<cv::Vec2d>(0,0)[1]/r_i_bM_dst.at<cv::Vec2d>(0,0)[2]);
    	//visualize points
-   	//cv::circle(rgbImg,i_uM,5,cv::Scalar(128,128,128),3);
-   	//cv::circle(rgbImg,i_bM,5,cv::Scalar(128,128,128),3);
-   	//cv::circle(rgbImg,i_lC1,5,cv::Scalar(128,128,128),3);
-   	//cv::circle(rgbImg,i_lC2,5,cv::Scalar(128,128,128),3);
-   	//cv::circle(rgbImg,i_rC1,5,cv::Scalar(128,128,128),3);
-   	//cv::circle(rgbImg,i_rC2,5,cv::Scalar(128,128,128),3);
+   	cv::circle(rgbImg,i_uM,5,cv::Scalar(128,128,128),3);
+   	cv::circle(rgbImg,i_bM,5,cv::Scalar(128,128,128),3);
+   	cv::circle(rgbImg,i_lC1,5,cv::Scalar(128,128,128),3);
+   	cv::circle(rgbImg,i_lC2,5,cv::Scalar(128,128,128),3);
+    cv::circle(rgbImg,i_rC1,5,cv::Scalar(128,128,128),3);
+   	cv::circle(rgbImg,i_rC2,5,cv::Scalar(128,128,128),3);
 
    	//recalculate corners
    	lDx = i_lC1.x - i_lC2.x;
@@ -366,14 +378,14 @@ void Table::segmentField(cv::Mat& rgbImg, std::vector<uint16_t> stats){
    	cv::fillPoly(mask,temp,cv::Scalar(1));
    	cvtColor(mask, mask, CV_GRAY2BGR); 
    	//cv::multiply(gray,mask,gray);
-   	//cv::circle(rgbImg,ul,2,cv::Scalar(255,128,255),2);
-   	//cv::circle(rgbImg,bl,2,cv::Scalar(255,128,255),2);
-   	//cv::circle(rgbImg,ur,2,cv::Scalar(255,128,255),2);
-   	//cv::circle(rgbImg,br,2,cv::Scalar(255,128,255),2);
-   	//cv::circle(rgbImg,uM,2,cv::Scalar(255,128,255),2);
-   	//cv::circle(rgbImg,bM,2,cv::Scalar(255,128,255),2);
-   	//cv::circle(rgbImg,ml,2,cv::Scalar(255,128,255),5);
-   	//cv::circle(rgbImg,mr,2,cv::Scalar(255,128,255),5);
+   	cv::circle(rgbImg,ul,2,cv::Scalar(255,128,255),2);
+   	cv::circle(rgbImg,bl,2,cv::Scalar(255,128,255),2);
+   	cv::circle(rgbImg,ur,2,cv::Scalar(255,128,255),2);
+   	cv::circle(rgbImg,br,2,cv::Scalar(255,128,255),2);
+   	cv::circle(rgbImg,uM,2,cv::Scalar(255,128,255),2);
+   	cv::circle(rgbImg,bM,2,cv::Scalar(255,128,255),2);
+   	cv::circle(rgbImg,ml,2,cv::Scalar(255,128,255),5);
+   	cv::circle(rgbImg,mr,2,cv::Scalar(255,128,255),5);
    	//cv::warpPerspective(edge,edge,H,edge.size());
    	//cv::circle(edge,ulR,2,cv::Scalar(255,128,255),2);
    	//cv::circle(edge,blR,2,cv::Scalar(255,128,255),2);
@@ -382,8 +394,38 @@ void Table::segmentField(cv::Mat& rgbImg, std::vector<uint16_t> stats){
    	//cv::circle(edge,mlR,2,cv::Scalar(255,128,255),5);
    	//cv::circle(edge,mrR,2,cv::Scalar(255,128,255),5);
    	
-   	//cv::imshow( "Display window", gray); 
-    //cv::waitKey(0);
+   	//calculate some constants
+   	height = bl.y-ul.y;
+   	upperWidth = ur.x-ul.x;
+   	lowerWidht = br.x-bl.x;
+   	upLowDiff = lowerWidht-upperWidth;
+   	upLowDiffPerHeigth = upLowDiff/height;
+   	
+   	cv::imshow( "edges", rgbImg); 
+    cv::waitKey(0);
+}
+
+
+cv::Point2i Table::rectify(cv::Point2i p){
+	cv::Point2i dst;
+	cv::Mat p_src = cv::Mat::zeros(1,1,CV_64FC2);
+	cv::Mat p_dst = cv::Mat::zeros(1,1,CV_64FC2);
+	p_src.at<cv::Vec2d>(0,0) = cv::Vec2d(p.x,p.y);
+	cv::transform(p_src,p_dst,H);
+	dst.x = round(p_dst.at<cv::Vec2d>(0,0)[0]/p_dst.at<cv::Vec2d>(0,0)[2]);
+	dst.y = round(p_dst.at<cv::Vec2d>(0,0)[1]/p_dst.at<cv::Vec2d>(0,0)[2]);
+	return dst;
+}
+
+cv::Point2i Table::backProject(cv::Point2i p){
+	cv::Point2i dst;
+	cv::Mat p_src = cv::Mat::zeros(1,1,CV_64FC2);
+	cv::Mat p_dst = cv::Mat::zeros(1,1,CV_64FC2);
+	p_src.at<cv::Vec2d>(0,0) = cv::Vec2d(p.x,p.y);
+	cv::transform(p_src,p_dst,H_inv);
+	dst.x = round(p_dst.at<cv::Vec2d>(0,0)[0]/p_dst.at<cv::Vec2d>(0,0)[2]);
+	dst.y = round(p_dst.at<cv::Vec2d>(0,0)[1]/p_dst.at<cv::Vec2d>(0,0)[2]);
+	return dst;
 }
 
 
@@ -393,5 +435,51 @@ void Table::segmentField(cv::Mat& rgbImg, std::vector<uint16_t> stats){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Hough transform
+Mat dst;
+    Mat cdst;
+    std::vector<cv::Vec2f> lines;
+    cv::Canny(image, dst, 50, 200, 3);
+    cv::cvtColor(dst, cdst, CV_GRAY2BGR);  
+    HoughLines(dst, lines, 1, CV_PI/180, 200, 0, 0 );
+    // draw lines
+    for( int i = 0; i < lines.size(); i++ )
+    {
+        float rho = lines[i][0], theta = lines[i][1];
+        cv::Point pt1, pt2;
+        double a = std::cos(theta), b = std::sin(theta);
+        double x0 = a*rho, y0 = b*rho;
+        pt1.x = round(x0 + 1000*(-b));
+        pt1.y = round(y0 + 1000*(a));
+        pt2.x = round(x0 - 1000*(-b));
+        pt2.y = round(y0 - 1000*(a));
+        cv::line( cdst, pt1, pt2, Scalar(0,0,255), 3, CV_AA);
+    }
+    imshow("source", image);
+    imshow("detected lines", cdst);
+    cv::waitKey(0);
+*/
 
 

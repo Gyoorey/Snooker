@@ -127,9 +127,15 @@ std::vector<cv::Point2i> Matcher::getMatchingPoints(){
 }
 
 int Matcher::pointDistanceFromLine(cv::Point2i x0, cv::Point2i x1, cv::Point2i p){
+	if(x0==p || x1==p){
+		return 0;
+	}
 	cv::Point2i temp1(x0 - x1);
 	cv::Point2i temp2(x1 - p);
-	return abs(temp1.x * temp2.y - temp1.y * temp2.x) / (int)std::sqrt(temp1.x*temp1.x + temp1.y*temp1.y);
+	int denum = (int)std::sqrt(temp1.x*temp1.x + temp1.y*temp1.y);
+	if(denum == 0)
+		return 0;
+	return abs(temp1.x * temp2.y - temp1.y * temp2.x) / denum;
 }
 
 bool Matcher::pointDistLargerThan(cv::Point2i p1, cv::Point2i p2, const int tol){
