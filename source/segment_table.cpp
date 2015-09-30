@@ -5,6 +5,7 @@
 #include "Table.hpp"
 #include "Balls.hpp"
 #include "Matcher.hpp"
+#include <chrono>
 
 using namespace cv;
 using namespace std;
@@ -36,6 +37,10 @@ int main( int argc, char** argv )
     //image = imread(argv[1], CV_LOAD_IMAGE_COLOR);   // Read the file
     cv::VideoCapture cap(argv[1]);
     cap >> image; // get a new frame from camera
+    std::cout << cap.get(CV_CAP_PROP_FPS) << std::endl;
+    auto start = std::chrono::system_clock::now();
+    auto end = std::chrono::system_clock::now();
+    start = std::chrono::system_clock::now();
     //image = imread("../data/Vegas1.jpg");
     Table t(image);
     std::cout << "Table segmented" << std::endl;
@@ -54,6 +59,10 @@ int main( int argc, char** argv )
     cv::Mat speedImage( 500, videoLength*5, CV_8UC1, cv::Scalar( 0 ) );
     for(;;)
     {
+    	end = std::chrono::system_clock::now();
+		auto time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		std::cout << 1000.0/time.count() << std::endl;
+		start = std::chrono::system_clock::now();
     	frameCnt++;
         cap >> image; // get a new frame from camera
         cv::Point2i whitePos = b.getWhitePos(image);
@@ -169,7 +178,7 @@ int main( int argc, char** argv )
     	cv::imshow("speed", speedImage);
 		cv::imshow("edges", imageROI);
 		char key;
-        if( (key = cv::waitKey(10)) == 's'){
+        if( (key = cv::waitKey(1)) == 's'){
         	cv::waitKey(0);
         }else if(key == 'q'){ 
         	break;
