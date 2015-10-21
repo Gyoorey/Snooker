@@ -175,7 +175,8 @@ int main( int argc, char** argv )
     		line( speedImage, cv::Point( 5*(w-1) , 500-prevSpeed ) , cv::Point( 5*w , 500-speed ) , cv::Scalar( 255 ), 2, 8, 0  );
     		prevSpeed = speed;
     	}
-    	cv::imshow("speed", speedImage);
+    	//cv::imshow("speed", speedImage);
+    	//cv::cvtColor(imageROI,imageROI,CV_BGR2GRAY);
 		cv::imshow("edges", imageROI);
 		char key;
         if( (key = cv::waitKey(1)) == 's'){
